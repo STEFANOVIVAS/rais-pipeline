@@ -89,8 +89,8 @@ with DAG(
     upload_from_local_to_adls=LocalFilesystemToWasbOperator(
         task_id="Upload_csv_file_to_blob",
         file_path='./data/RAIS_VINC_PUB_SUL.txt',
-        container_name="rais-2020",
-        blob_name="vinculos",
+        container_name="rais",
+        blob_name="vinculos.csv",
         wasb_conn_id='azure_adls_conn'
 
     )
@@ -98,8 +98,9 @@ with DAG(
     delete_data=BashOperator(
         task_id="Delete_from_data_folder",
         bash_command=""" 
-                        rm ./data/RAIS_VINC_PUB_SUL.7z;
-                        rm ./data/RAIS_VINC_PUB_SUL.txt;
+        
+                    rm /opt/airflow/data/RAIS_VINC_PUB_SUL.7z ;
+                    rm /opt/airflow/data/RAIS_VINC_PUB_SUL.txt;
         """
     )
 
@@ -107,3 +108,5 @@ with DAG(
 
 get_file >> is_ftp_file_available >> extract_files >> is_txt_file_extracted >> upload_from_local_to_adls
 upload_from_local_to_adls >> delete_data
+
+
