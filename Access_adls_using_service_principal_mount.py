@@ -44,4 +44,8 @@ mount_adls('rais','processed')
 
 # COMMAND ----------
 
+dbutils.fs.mounts()
+
+# COMMAND ----------
+
 
