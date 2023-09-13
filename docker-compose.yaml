@@ -67,6 +67,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '160'
     AIRFLOW__CORE__TEST_CONNECTION: Enabled
     AIRFLOW__CORE__PARALLELISM: '14'
+    # AIRFLOW__LOGGING__LOG_FORMAT: '[%%(asctime)s] {%%(filename)s:%%(lineno)d} %%(levelname)s - %%(message)s'
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -81,6 +82,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+    - ${AIRFLOW_PROJ_DIR:-.}/conf:/opt/airflow/conf
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
