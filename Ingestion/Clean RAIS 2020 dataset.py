@@ -12,6 +12,12 @@ from pyspark.sql.types import StructType,StructField,IntegerType,StringType,Floa
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Designing dataframe schema
+# MAGIC
+
+# COMMAND ----------
+
 rais_schema=StructType(fields=[StructField("Bairros SP",StringType(),False),
                                   StructField("Bairros Fortaleza",StringType(),False),
                                   StructField("Bairros RJ",StringType(),False),
@@ -51,7 +57,7 @@ rais_schema=StructType(fields=[StructField("Bairros SP",StringType(),False),
                                   StructField("CNAE 2.0 Subclasse",StringType(),True),
                                   StructField("Sexo Trabalhador",StringType(),True),
                                   StructField("Tamanho Estabelecimento",StringType(),True),
-                                  StructField("Tempo Emprego",FloatType(),True),
+                                  StructField("Tempo Emprego",DoubleType(),True),
                                   StructField("Tipo Admissão",StringType(),True),
                                   StructField("Tipo Estab41",StringType(),True),
                                   StructField("Tipo Estab42",StringType(),True),
@@ -75,87 +81,13 @@ rais_schema=StructType(fields=[StructField("Bairros SP",StringType(),False),
 
 # COMMAND ----------
 
-# df_rais_centro_oeste=spark.read.schema(rais_schema).csv("/mnt/rais/raw/RAIS_VINC_PUB_CENTRO_OESTE.txt.gz", encoding='ISO-8859-1', header=True, sep=";")
-df_rais_centro_oeste=spark.read.csv("/mnt/rais/raw/RAIS_VINC_PUB_CENTRO_OESTE.txt.gz", encoding='ISO-8859-1', header=True, sep=";")
-
-# COMMAND ----------
-
-integer_format_columns=["Qtd Hora Contr", "Idade", "Mês Admissão", "Mês Desligamento", "Qtd Dias Afastamento","Ano Chegada Brasil"]
-
-# COMMAND ----------
-
-def cast_string_to_integer(columns,df):
-    for column in columns:
-        df.select(col(column).cast(IntegerType()))
-    return df
-
-# COMMAND ----------
-
-df_rais_centro_oeste=cast_string_to_integer(integer_format_columns, df_rais_centro_oeste)
-
-# COMMAND ----------
-
-display(df_rais_centro_oeste)
-
-# COMMAND ----------
-
-double_format_columns=["Vl Remun Dezembro Nom","Vl Remun Dezembro (SM)","Vl Remun Média Nom","Vl Remun Média (SM)","Vl Rem Janeiro SC","Vl Rem Fevereiro SC","Vl Rem Março SC","Vl Rem Abril SC","Vl Rem Maio SC","Vl Rem Junho SC","Vl Rem Julho SC","Vl Rem Agosto SC","Vl Rem Setembro SC","Vl Rem Outubro SC","Vl Rem Novembro SC"]
-
-# COMMAND ----------
-
-def convert_string_to_double(columns_list, df):
-    for column in columns_list:
-        df = df.withColumn(column, regexp_replace(column, ',', '.'))
-        df.select(col(column).cast(DoubleType()))
-    return df
-
-# COMMAND ----------
-
-df_rais_centro_oeste=convert_string_to_double(double_format_columns,df_rais_centro_oeste)
-
-# COMMAND ----------
-
-display(df_rais_centro_oeste)
+# MAGIC %md
+# MAGIC #### The dataframe is separated in 6 differents Brazilian regions. Joining all dataframes in just one with all rows.
+# MAGIC
 
 # COMMAND ----------
 
 df_rais_centro_oeste=spark.read.csv("/mnt/rais/raw/RAIS_VINC_PUB_CENTRO_OESTE.txt.gz", encoding='ISO-8859-1', header=True, sep=";")
-
-# COMMAND ----------
-
-display(df_rais_centro_oeste)
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-df_rais_centro_oeste = df_rais_centro_oeste.withColumn('Qtd Hora Contr', col('Qtd Hora Contr').cast('integer'))
-df_rais_centro_oeste = df_rais_centro_oeste.withColumn('Idade', col('Idade').cast('integer'))
-df_rais_centro_oeste = df_rais_centro_oeste.withColumn('Mês Admissão', col('Mês Admissão').cast('integer'))
-df_rais_centro_oeste = df_rais_centro_oeste.withColumn('Mês Desligamento', col('Mês Desligamento').cast('integer'))
-df_rais_centro_oeste = df_rais_centro_oeste.withColumn('Qtd Dias Afastamento', col('Qtd Dias Afastamento').cast('integer'))
-df_rais_centro_oeste = df_rais_centro_oeste.withColumn('Ano Chegada Brasil', col('Ano Chegada Brasil').cast('integer'))
-
-# COMMAND ----------
-
-
-# .withColumn('Vl Remun Dezembro Nom', df_rais_centro_oeste['Vl Remun Dezembro Nom'].cast("float"))
-    # .withColumn('Vl Remun Dezembro Nom', regexp_replace('revenue', '.', ',')))
-
-# COMMAND ----------
-
-
-display(df_rais_centro_oeste)
-
-# COMMAND ----------
-
-df_rais_centro_oeste.write.parquet("/mnt/rais/raw/RAIS_CENTRO_OESTE.parquet")
-
-# COMMAND ----------
-
-
 
 # COMMAND ----------
 
@@ -163,15 +95,7 @@ df_rais_nordeste=spark.read.csv("/mnt/rais/raw/RAIS_VINC_PUB_NORDESTE.txt.gz", e
 
 # COMMAND ----------
 
-display(df_rais_nordeste.count())
-
-# COMMAND ----------
-
 df_rais_norte=spark.read.csv("/mnt/rais/raw/RAIS_VINC_PUB_NORTE.txt.gz", encoding='ISO-8859-1', header=True, sep=";")
-
-# COMMAND ----------
-
-display(df_rais_norte.count())
 
 # COMMAND ----------
 
@@ -179,23 +103,11 @@ df_rais_sul=spark.read.csv("/mnt/rais/raw/RAIS_VINC_PUB_SUL.txt.gz", encoding='I
 
 # COMMAND ----------
 
-display(df_rais_sul.count())
-
-# COMMAND ----------
-
 df_rais_mg=spark.read.csv("/mnt/rais/raw/RAIS_VINC_PUB_MG_ES_RJ.txt.gz", encoding='ISO-8859-1', header=True, sep=";")
 
 # COMMAND ----------
 
-display(df_rais_mg.count())
-
-# COMMAND ----------
-
 df_rais_sp=spark.read.csv("/mnt/rais/raw/RAIS_VINC_PUB_SP.txt.gz", encoding='ISO-8859-1', header=True, sep=";")
-
-# COMMAND ----------
-
-display(df_rais_sp.count())
 
 # COMMAND ----------
 
@@ -208,6 +120,70 @@ display(df_rais_brasil)
 # COMMAND ----------
 
 df_rais_brasil.count()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Casting columns to Integer data type
+# MAGIC
+
+# COMMAND ----------
+
+def cast_string_to_integer(columns,df):
+    for column in columns:
+        df=df.withColumn(column,df[column].cast('integer'))
+    return df
+    
+
+# COMMAND ----------
+
+integer_format_columns=["Qtd Hora Contr", "Idade", "Mês Admissão", "Mês Desligamento", "Qtd Dias Afastamento","Ano Chegada Brasil"]
+df_rais_brasil=cast_string_to_integer(integer_format_columns, df_rais_brasil)
+
+# COMMAND ----------
+
+display(df_rais_brasil.printSchema())
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Casting columns to Double data type
+# MAGIC
+
+# COMMAND ----------
+
+def cast_string_to_double(columns_list, df):
+    for column in columns_list:
+        df = df.withColumn(column, regexp_replace(column, ',', '.'))
+        df=df.withColumn(column,df[column].cast(DoubleType()))
+    return df
+
+# COMMAND ----------
+
+double_format_columns=["Tempo Emprego","Vl Remun Dezembro Nom","Vl Remun Dezembro (SM)","Vl Remun Média Nom","Vl Remun Média (SM)","Vl Rem Janeiro SC","Vl Rem Fevereiro SC","Vl Rem Março SC","Vl Rem Abril SC","Vl Rem Maio SC","Vl Rem Junho SC","Vl Rem Julho SC","Vl Rem Agosto SC","Vl Rem Setembro SC","Vl Rem Outubro SC","Vl Rem Novembro SC"]
+
+# COMMAND ----------
+
+df_rais_brasil=cast_string_to_double(double_format_columns,df_rais_brasil)
+
+# COMMAND ----------
+
+display(df_rais_brasil)
+
+# COMMAND ----------
+
+display(df_rais_brasil.printSchema())
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Drop undesirable columns
+# MAGIC
+
+# COMMAND ----------
+
+drop_columns=("Bairros SP","Bairros Fortaleza","Bairros RJ", "Distritos SP","Regiões Adm DF")
+df_rais_brasil.drop(*drop_columns).printSchema()
 
 # COMMAND ----------
 
