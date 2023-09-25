@@ -1,4 +1,4 @@
 # Databricks notebook source
-raw_folder_path='/mnt/rais/raw'
-processed_folder_path='/mnt/rais/processed'
-presentation_folder_path='/mnt/rais/presentation'
+raw_folder_path='/mnt/rais2020/bronze'
+processed_folder_path='/mnt/rais2020/silver'
+presentation_folder_path='/mnt/rais2020/gold'

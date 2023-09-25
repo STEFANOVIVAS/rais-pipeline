@@ -36,15 +36,19 @@ dbutils.secrets.list(scope='rais-scope')
 
 # COMMAND ----------
 
-mount_adls('rais','raw')
-
-# COMMAND ----------
-
-mount_adls('rais','processed')
-
-# COMMAND ----------
-
 dbutils.fs.mounts()
+
+# COMMAND ----------
+
+mount_adls('rais2020','bronze')
+
+# COMMAND ----------
+
+mount_adls('rais2020','silver')
+
+# COMMAND ----------
+
+mount_adls('rais2020','gold')
 
 # COMMAND ----------
 
