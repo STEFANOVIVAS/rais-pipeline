@@ -36,7 +36,7 @@ display(df_atividade)
 
 # COMMAND ----------
 
-df_atividade.to_parquet("/mnt/rais2020/silver/atividades.parquet")
+df_atividade.to_parquet("/mnt/rais2020/silver/atividades_cnae.parquet")
 
 # COMMAND ----------
 
