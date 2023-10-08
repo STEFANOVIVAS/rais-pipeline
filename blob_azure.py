@@ -57,4 +57,4 @@ def upload_blobs_container(storage_account, container_name,local_path,file_name)
         print('Upload file error')
         print(err)
 
-upload_blobs_container('rais','rais-2020',"./data",'RAIS_VINC_PUB_NORTE.txt.gz')
+upload_blobs_container('rais2020','silver',"./data",'RAIS_VINC_PUB_SP.txt.gz')

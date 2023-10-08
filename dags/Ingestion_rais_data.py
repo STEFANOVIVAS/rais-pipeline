@@ -5,14 +5,17 @@ from datetime import timedelta,datetime
 from ftplib import FTP
 from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
+from airflow.providers.google.cloud.transfers.azure_blob_to_gcs import AzureBlobStorageToGCSOperator
 from airflow.providers.microsoft.azure.transfers.local_to_wasb import LocalFilesystemToWasbOperator
 from airflow.providers.microsoft.azure.transfers.local_to_adls import LocalFilesystemToADLSOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.providers.microsoft.azure.sensors.wasb import WasbBlobSensor
 from airflow.sensors.time_delta import TimeDeltaSensor
-from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.providers.databricks.operators.databricks import DatabricksRunNowOperator
-
+from airflow.providers.microsoft.azure.hooks.data_lake import AzureDataLakeStorageV2Hook,AzureDataLakeHook
+from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
+from azure.storage.filedatalake import DataLakeFileClient,DataLakeDirectoryClient 
+import os
 
 
 
@@ -59,14 +62,34 @@ with DAG(
     dag_id="Ingestion_rais_data",
        
     description="RAIS files DAG",
-    schedule=timedelta(days=1),
+    schedule=None,
     start_date=datetime(2023, 8, 19),
     catchup=False,
     tags=["rais"],
     default_args=default_args
 ) as dag:
     
-    with TaskGroup(f'Ingestion_RAIS') as Ingestion_RAIS:
+    with TaskGroup(f'Ingestion_RAIS_layout') as Ingestion_RAIS_layout:
+    
+        get_rais_layout_file = FTPFileTransmitOperator(
+                    task_id=f"Get_rais_layout_file_from_FTP_server",
+                    ftp_conn_id="ftp_default",
+                    local_filepath=f"./data/Rais_vinculos_layout2020.xls",
+                    remote_filepath=f"/pdet/microdados/RAIS/Layouts/vínculos/Rais_vinculos_layout2020.xls",
+                    operation="get")
+        
+        upload_from_local_to_blob_=LocalFilesystemToWasbOperator(
+                        task_id=f"Upload_rais_layout_file_to_blob",
+                        file_path='./data/Rais_vinculos_layout2020.xls',
+                        container_name="bronze",
+                        blob_name ='Rais_vinculos_layout2020.xls',
+                        wasb_conn_id='azure_adls_conn'
+
+                    )
+
+        get_rais_layout_file >> upload_from_local_to_blob_
+    
+    with TaskGroup(f'Ingestion_RAIS_vinculos') as Ingestion_RAIS_vinculos:
     
         # get files from FTP 
         with TaskGroup(f'Download_ftp_files') as Download_files:
@@ -74,7 +97,7 @@ with DAG(
             for file in arquivos:
 
         
-                get_file = FTPFileTransmitOperator(
+                get_rais_vinculos_file = FTPFileTransmitOperator(
                 task_id=f"Get_{file}_from_FTP_server",
                 ftp_conn_id="ftp_default",
                 local_filepath=f"./data/{file}.7z",
@@ -145,11 +168,12 @@ with DAG(
         with TaskGroup(f'Upload_blob') as Upload_blob:
             
             for file in arquivos:
-            
-                upload_from_local_to_adls_centro_oeste=LocalFilesystemToWasbOperator(
-                    task_id=f"Upload_csv_{file}_to_blob",
+                
+                 
+                upload_from_local_to_wasb=LocalFilesystemToWasbOperator(
+                    task_id=f"Upload_rais_vinculos_csv_{file}_to_blob",
                     file_path=f'./data/{file}.txt.gz',
-                    container_name="raw",
+                    container_name="bronze",
                     blob_name =f'{file}.txt.gz',
                     wasb_conn_id='azure_adls_conn'
 
@@ -158,26 +182,67 @@ with DAG(
     Download_files >> Available_7zip_files >>Extract_files >> Available_csv
     Available_csv >> Zip_files >> Delete_files >> Upload_blob
        
-#     with TaskGroup(f'Is_files_available_blob') as Available_blob:
+    with TaskGroup(f'Is_files_available_blob') as Available_blob:
         
-#         for file in arquivos:
+        for file in arquivos:
         
-#             wait_for_blob_in_storage=WasbBlobSensor(
-#                 task_id=f"wait_for_blob_{file}_in_storage",
-#                 container_name="raw",
-#                 blob_name=f"{file}.txt.gz",
-#                 wasb_conn_id='azure_adls_conn'
-#             )
+            wait_for_vinculos_objects_in_storage=WasbBlobSensor(
+                task_id=f"wait_for_blob_{file}_in_storage",
+                container_name="bronze",
+                blob_name=f"{file}.txt.gz",
+                wasb_conn_id='azure_adls_conn'
+            )
+        wait_for_layout_in_storage=WasbBlobSensor(
+                task_id=f"wait_for_layout_in_storage",
+                container_name="bronze",
+                blob_name="Rais_vinculos_layout2020.xls",
+                wasb_conn_id='azure_adls_conn'
+            )
+    
+
+    databricks_load_fact_vinculos = DatabricksRunNowOperator(
+    task_id = 'Ingestion_RAIS_data_blob',
+    databricks_conn_id = 'databricks_default',
+    job_id = "923938036859559"
+  )
+    databricks_load_dim_tables = DatabricksRunNowOperator(
+    task_id = 'Ingestion_dim_municipios_ocupacao_atividade',
+    databricks_conn_id = 'databricks_default',
+    job_id = "230388160279966"
+  )
+   
+    databricks_transform_data = DatabricksRunNowOperator(
+    task_id = 'Join_vinculos_table_with_municipios_ocupacao_atividade',
+    databricks_conn_id = 'databricks_default',
+    job_id = "968113886196840"
+  )
+
+
+
+    [Ingestion_RAIS_vinculos,Ingestion_RAIS_layout] >> Available_blob >> databricks_load_fact_vinculos >> databricks_load_dim_tables >> databricks_transform_data
+
 
     
 
-#     databricks_load_files_raw = DatabricksRunNowOperator(
-#     task_id = 'Convert_csv_files_to_parquet',
-#     databricks_conn_id = 'databricks_default',
-#     job_id = "923938036859559"
-#   )
-
-#     Ingestion_RAIS >> Available_blob >> databricks_load_files_raw
+   
     
 
 
+    
+    
+    # def upload_to_adls_gen2():
+    #     azure_hook=AzureDataLakeStorageV2Hook('adls_conn')
+    #     azure_hook.upload_file(
+    #         file_system_name='rais-2020',
+    #         file_name='RAIS_VINC_PUB_CENTRO_OESTE.txt.gz',
+    #         file_path='./data/RAIS_VINC_PUB_CENTRO_OESTE.txt.gz',
+    #     )
+
+        
+
+    # upload_from_local_to_adls=PythonOperator(
+    #                 task_id=f"Upload_csv_to_blob",
+    #                 python_callable=upload_to_adls_gen2,
+                   
+
+    #             )

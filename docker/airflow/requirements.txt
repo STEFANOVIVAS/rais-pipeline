@@ -2,3 +2,4 @@ py7zr
 apache-airflow-providers-microsoft-azure
 apache-airflow-providers-databricks
 apache-airflow-providers-amazon
+apache-airflow-providers-google
