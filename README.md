@@ -3,7 +3,7 @@
 A data engineer pipeline for extracting, loading, and transforming the Brazilian job market dataset named RAIS. The data was extracted from the Brazilian Labour Ministry FTP server, which provided us with 7z compressed type files. 
 ### Data Visualization
 
-![Example dashboard image](example-dashboard.png)
+![Example dashboard image](Rais dashboard.png)
 
 ### Data Architecture
 
