@@ -7,7 +7,7 @@ A data engineer pipeline for extracting, loading, and transforming the Brazilian
 
 ### Data Architecture
 
-![Example architecture image](example-architecture.png)
+![Example architecture image](rais-data-architecture.drawio.png)
 
 If you decide to include this, you should also talk a bit about why you chose the architecture and tools you did for this project.
 
