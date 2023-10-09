@@ -1,6 +1,6 @@
 ## Overview
 
-A data engineer pipeline for extracting, loading, and transforming the Brazilian job market dataset named RAIS. The data was extracted from the Brazilian Labour Ministry FTP server, which provided us with 7z compressed type files. 
+A data engineer pipeline for extracting, loading, and transforming the Brazilian job market dataset named RAIS, using technologies such as Airflow, Pyspark with Azure Databricks, Azure Synapses Analytics and Power Bi.  The data was extracted from the Brazilian Labour Ministry FTP server, which provided us with 7z compressed type files. 
 ### Data Visualization
 
 ![Example dashboard image](Rais_dashboard.png)
