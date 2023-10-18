@@ -7,14 +7,25 @@ The goal of this project is to perform a data engineer ETL pipeline for creating
 
 ### Data Architecture
 
-#### High-level architecture
 ![Example architecture image](rais-data-architecture.drawio.png)
 
-#### Airflow's Orchestration architecture 
-![Example architecture image](rais-data-architecture.drawio.png)
+- The original dataset was a 6-part file, separated by Brazilian regions.
+- Extract and compress the dataset file to a gzip format locally with Airflow, so we have a light file size to upload to blob storage and a compatible file format to spark to read.
+- Load data in Azure blob storage or Azure Data Lake so we can easily interact with Databricks and Azure Synapses Analytics.
+- The unified dataset has more than 65 million records so we need powerful data processing like spark.
+- Azure Synapses Analytics provides an easy-to-set external table from Azure Data Lake Storage gen 2 acting like a Data Warehousing.
+- Azure Synapses Analytics also provides an interface with Microsoft Power BI, through a linked service configuration, however, due to my Microsoft account not being of a Professional type I have to plug it into the Microsoft BI desktop. 
 
+### Dataset
+The RAIS job market dataset records include fields capturing the month of admission, salary, age, hours worked within a month, sex, color race, type of occupation, city, state, industry sector and subsector, duration of actual labor, and much more.
 
-If you decide to include this, you should also talk a bit about why you chose the architecture and tools you did for this project.
+Here is the dataset used in the video - https://github.com/darshilparmar/uber-etl-pipeline-data-engineering-project/blob/main/data/uber_data.csv
+
+More info about dataset can be found here:
+
+Website - https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+Data Dictionary - https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
+
 
 ## Prerequisites
 
