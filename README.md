@@ -1,13 +1,18 @@
 ## Overview
 
-A data engineer pipeline for extracting, loading, and transforming the Brazilian job market dataset named RAIS, using technologies such as Airflow, Pyspark with Azure Databricks, Azure Synapses Analytics and Power Bi.  The data was extracted from the Brazilian Labour Ministry FTP server, which provided us with 7z compressed type files. 
+The goal of this project is to perform a data engineer ETL pipeline for creating a Data Warehouse on the Brazilian job market dataset named RAIS, using technologies such as Airflow, Pyspark with Azure Databricks, Azure Synapses Analytics, and Power BI. 
 ### Data Visualization
 
 ![Example dashboard image](Rais_dashboard.png)
 
 ### Data Architecture
 
+#### High-level architecture
 ![Example architecture image](rais-data-architecture.drawio.png)
+
+#### Airflow's Orchestration architecture 
+![Example architecture image](rais-data-architecture.drawio.png)
+
 
 If you decide to include this, you should also talk a bit about why you chose the architecture and tools you did for this project.
 
